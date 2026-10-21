@@ -1,6 +1,6 @@
 # CursorMoving
 
-macOS 메뉴바 앱 — 유휴 시 커서로 도형 그리기 + 마우스 클릭 녹화/재생
+macOS 메뉴바 앱 — 유휴 시 커서로 도형 그리기
 
 ## 커서 이동
 
@@ -22,17 +22,14 @@ open build/CursorMoving.app
 | 단축키 | 동작 |
 |--------|------|
 | ⌃⌥⌘M | 커서 이동 켜기/끄기 |
-| ⌃⌥⌘R | 클릭 녹화 시작/중지 |
-| ⌃⌥⌘P | 최근 녹화 재생/중지 |
 
 ## 메뉴바 아이콘
 
-- 회색 화살표: 꺼짐 / 초록 화살표(모션라인): 커서 이동 중 / 빨간 원: 녹화 중 / 파란 재생: 재생 중
+- 회색 화살표: 꺼짐 / 초록 화살표(모션라인): 커서 이동 중
 
 ## 권한
 
-- **손쉬운 사용**: 커서 이동, 클릭 재생
-- **입력 모니터링**: 클릭 녹화
+- **손쉬운 사용**: 커서 이동
 
 빌드 스크립트는 키체인의 `Developer ID Application` / `Apple Development` 인증서로 서명한다 (`SIGN_IDENTITY` 로 지정 가능).
 인증서 서명은 팀 ID 기준이라 재빌드해도 권한이 유지된다. 인증서가 없으면 ad-hoc 서명으로 대체되며,
@@ -40,6 +37,5 @@ open build/CursorMoving.app
 
 ## 구조
 
-- `Sources/CursorMovingCore` — 순수 로직 (이동 좌표 계산, 녹화 빌더, 저장소) + 테스트
-- `Sources/CursorMoving` — AppKit 메뉴바 앱 (CGEvent 주입, EventTap 녹화, Carbon 단축키)
-- 녹화 파일: `~/Library/Application Support/CursorMoving/Recordings/*.json`
+- `Sources/CursorMovingCore` — 순수 로직 (도형 경로 계산, 유휴 판정) + 테스트
+- `Sources/CursorMoving` — AppKit 메뉴바 앱 (CGEvent 주입, Carbon 단축키)

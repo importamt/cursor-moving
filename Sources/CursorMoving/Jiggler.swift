@@ -12,8 +12,6 @@ final class Jiggler {
 
     var idleThreshold: TimeInterval = 30
     var shape: JiggleShape = .circle
-    /// true 를 반환하면 그리지 않는다 (녹화/재생 중 등)
-    var shouldSkip: () -> Bool = { false }
 
     private var timer: Timer?
     private var drawTask: Task<Void, Never>?
@@ -40,7 +38,7 @@ final class Jiggler {
     }
 
     private func tick() {
-        guard drawTask == nil, !shouldSkip(), let anyInput = CGEventType(rawValue: ~0) else { return }
+        guard drawTask == nil, let anyInput = CGEventType(rawValue: ~0) else { return }
         let idle = CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput)
         guard JigglePlanner.shouldJiggle(
             idleSeconds: idle,
@@ -65,8 +63,8 @@ final class Jiggler {
             var expected = current
             for point in path {
                 try? await Task.sleep(nanoseconds: frameNanoseconds)
-                guard let self, !Task.isCancelled, !self.shouldSkip(), !Self.userTookOver(expected: expected, since: startedAt) else { break }
-                MouseController.post(.move, at: point)
+                guard self != nil, !Task.isCancelled, !Self.userTookOver(expected: expected, since: startedAt) else { break }
+                MouseController.move(to: point)
                 expected = point
             }
 

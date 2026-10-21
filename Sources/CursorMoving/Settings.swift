@@ -20,16 +20,6 @@ struct Settings {
         nonmutating set { defaults.set(newValue.rawValue, forKey: "shape") }
     }
 
-    var recordMoves: Bool {
-        get { defaults.bool(forKey: "recordMoves") }
-        nonmutating set { defaults.set(newValue, forKey: "recordMoves") }
-    }
-
-    var loopPlayback: Bool {
-        get { defaults.bool(forKey: "loopPlayback") }
-        nonmutating set { defaults.set(newValue, forKey: "loopPlayback") }
-    }
-
     static func durationTitle(_ seconds: TimeInterval) -> String {
         seconds < 60 ? "\(Int(seconds))초" : "\(Int(seconds / 60))분"
     }

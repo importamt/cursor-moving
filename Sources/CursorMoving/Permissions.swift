@@ -9,7 +9,7 @@ enum Permissions {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
-    /// 이벤트 주입(커서 이동/클릭 재생)에 필요
+    /// 이벤트 주입(커서 이동)에 필요
     static func ensureAccessibility() -> Bool {
         guard !AXIsProcessTrusted() else { return true }
         showAlert(
@@ -20,28 +20,8 @@ enum Permissions {
         return false
     }
 
-    /// 클릭 녹화(이벤트 수신)에 필요
-    static func ensureInputMonitoring() -> Bool {
-        guard !CGPreflightListenEventAccess() else { return true }
-        CGRequestListenEventAccess()
-        showInputMonitoringAlert()
-        return false
-    }
-
-    static func showInputMonitoringAlert() {
-        showAlert(
-            title: "입력 모니터링 권한이 필요합니다",
-            message: "시스템 설정 → 개인정보 보호 및 보안 → 입력 모니터링에서 CursorMoving 을 허용한 뒤 다시 시도해 주세요.",
-            openSettings: openInputMonitoringSettings
-        )
-    }
-
     static func openAccessibilitySettings() {
         open("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
-    }
-
-    static func openInputMonitoringSettings() {
-        open("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")
     }
 
     static func showAlert(title: String, message: String, openSettings: (() -> Void)? = nil) {
