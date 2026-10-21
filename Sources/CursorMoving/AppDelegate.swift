@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if jiggler.isRunning {
             jiggler.stop()
         } else {
-            guard Permissions.ensureAccessibility() else { return }
+            guard Permissions.ensureAccessibility(settings.strings) else { return }
             jiggler.start()
         }
         refreshStatusIcon()
@@ -51,14 +51,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func refreshStatusIcon() {
         guard let button = statusItem?.button else { return }
+        let strings = settings.strings
         let symbol: String
         let tint: NSColor?
         let tooltip: String
 
         if jiggler.isRunning {
-            (symbol, tint, tooltip) = ("cursorarrow.motionlines", .systemGreen, "커서 이동 켜짐")
+            (symbol, tint, tooltip) = ("cursorarrow.motionlines", .systemGreen, strings.tooltipOn)
         } else {
-            (symbol, tint, tooltip) = ("cursorarrow", nil, "커서 이동 꺼짐")
+            (symbol, tint, tooltip) = ("cursorarrow", nil, strings.tooltipOff)
         }
 
         let image = NSImage(systemSymbolName: symbol, accessibilityDescription: tooltip)
@@ -73,45 +74,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        let strings = settings.strings
 
-        menu.addItem(.disabled(statusText))
+        menu.addItem(.disabled(
+            jiggler.isRunning ? strings.statusOn(threshold: settings.idleThreshold, shape: settings.shape) : strings.statusOff
+        ))
         if hotKeyFailed {
-            menu.addItem(.disabled("⚠️ 단축키 충돌: \(HotKey.toggleJiggleLabel)"))
+            menu.addItem(.disabled(strings.hotKeyConflict(HotKey.toggleJiggleLabel)))
         }
         if !AXIsProcessTrusted() {
-            menu.addItem(ClosureMenuItem(title: "⚠️ 손쉬운 사용 권한 허용하기…") {
+            menu.addItem(ClosureMenuItem(title: strings.grantAccessibility) {
                 Permissions.openAccessibilitySettings()
             })
         }
         menu.addItem(.separator())
 
         menu.addItem(ClosureMenuItem(
-            title: jiggler.isRunning ? "커서 이동 끄기" : "커서 이동 켜기",
+            title: jiggler.isRunning ? strings.turnOff : strings.turnOn,
             key: "m",
             modifiers: HotKey.menuModifiers
         ) { [weak self] in self?.toggleJiggle() })
-        menu.addItem(submenu("유휴 감지: \(Settings.durationTitle(settings.idleThreshold))", items: Settings.idleThresholdOptions.map { seconds in
-            ClosureMenuItem(title: Settings.durationTitle(seconds), checked: settings.idleThreshold == seconds) { [weak self] in
+        menu.addItem(submenu(strings.idleMenu(settings.idleThreshold), items: Settings.idleThresholdOptions.map { seconds in
+            ClosureMenuItem(title: strings.duration(seconds), checked: settings.idleThreshold == seconds) { [weak self] in
                 self?.settings.idleThreshold = seconds
                 self?.jiggler.idleThreshold = seconds
             }
         }))
-        menu.addItem(submenu("모양: \(settings.shape.title)", items: JiggleShape.allCases.map { shape in
-            ClosureMenuItem(title: shape.title, checked: settings.shape == shape) { [weak self] in
+        menu.addItem(submenu(strings.shapeMenu(settings.shape), items: JiggleShape.allCases.map { shape in
+            ClosureMenuItem(title: strings.shape(shape), checked: settings.shape == shape) { [weak self] in
                 self?.settings.shape = shape
                 self?.jiggler.shape = shape
             }
         }))
+        menu.addItem(submenu(strings.languageMenu(settings.language), items: LanguagePreference.allCases.map { language in
+            ClosureMenuItem(title: strings.languagePreference(language), checked: settings.language == language) { [weak self] in
+                self?.settings.language = language
+                self?.refreshStatusIcon()
+            }
+        }))
         menu.addItem(.separator())
 
-        menu.addItem(ClosureMenuItem(title: "종료", key: "q", modifiers: .command) {
+        menu.addItem(ClosureMenuItem(title: strings.quit, key: "q", modifiers: .command) {
             NSApp.terminate(nil)
         })
-    }
-
-    private var statusText: String {
-        guard jiggler.isRunning else { return "커서 이동 꺼짐" }
-        return "커서 이동 켜짐 · \(Settings.durationTitle(settings.idleThreshold)) 유휴 시 \(settings.shape.title)"
     }
 
     private func submenu(_ title: String, items: [NSMenuItem]) -> NSMenuItem {

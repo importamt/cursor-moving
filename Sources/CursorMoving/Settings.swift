@@ -20,7 +20,12 @@ struct Settings {
         nonmutating set { defaults.set(newValue.rawValue, forKey: "shape") }
     }
 
-    static func durationTitle(_ seconds: TimeInterval) -> String {
-        seconds < 60 ? "\(Int(seconds))초" : "\(Int(seconds / 60))분"
+    var language: LanguagePreference {
+        get { defaults.string(forKey: "language").flatMap(LanguagePreference.init(rawValue:)) ?? .system }
+        nonmutating set { defaults.set(newValue.rawValue, forKey: "language") }
+    }
+
+    var strings: Strings {
+        Strings(language: language.resolved())
     }
 }

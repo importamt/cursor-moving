@@ -6,15 +6,6 @@ public enum JiggleShape: String, CaseIterable, Codable, Sendable {
     case circle
     case square
     case star
-
-    public var title: String {
-        switch self {
-        case .zigzag: return "지그재그"
-        case .circle: return "동그라미"
-        case .square: return "네모"
-        case .star: return "별"
-        }
-    }
 }
 
 public enum JigglePlanner {
