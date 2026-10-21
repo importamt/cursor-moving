@@ -3,26 +3,21 @@ import CursorMovingCore
 
 /// UserDefaults 에 저장되는 사용자 설정
 struct Settings {
-    static let intervalOptions: [TimeInterval] = [10, 30, 60, 120, 300]
+    static let idleThresholdOptions: [TimeInterval] = [5, 10, 15, 30, 60, 300]
 
     private let defaults = UserDefaults.standard
 
-    var interval: TimeInterval {
+    var idleThreshold: TimeInterval {
         get {
-            let value = defaults.double(forKey: "interval")
-            return value > 0 ? value : 60
+            let value = defaults.double(forKey: "idleThreshold")
+            return Self.idleThresholdOptions.contains(value) ? value : 30
         }
-        nonmutating set { defaults.set(newValue, forKey: "interval") }
+        nonmutating set { defaults.set(newValue, forKey: "idleThreshold") }
     }
 
-    var mode: JiggleMode {
-        get { defaults.string(forKey: "mode").flatMap(JiggleMode.init(rawValue:)) ?? .subtle }
-        nonmutating set { defaults.set(newValue.rawValue, forKey: "mode") }
-    }
-
-    var onlyWhenIdle: Bool {
-        get { defaults.object(forKey: "onlyWhenIdle") as? Bool ?? true }
-        nonmutating set { defaults.set(newValue, forKey: "onlyWhenIdle") }
+    var shape: JiggleShape {
+        get { defaults.string(forKey: "shape").flatMap(JiggleShape.init(rawValue:)) ?? .circle }
+        nonmutating set { defaults.set(newValue.rawValue, forKey: "shape") }
     }
 
     var recordMoves: Bool {
@@ -35,7 +30,7 @@ struct Settings {
         nonmutating set { defaults.set(newValue, forKey: "loopPlayback") }
     }
 
-    static func intervalTitle(_ seconds: TimeInterval) -> String {
+    static func durationTitle(_ seconds: TimeInterval) -> String {
         seconds < 60 ? "\(Int(seconds))초" : "\(Int(seconds / 60))분"
     }
 }

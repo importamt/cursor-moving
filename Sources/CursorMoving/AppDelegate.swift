@@ -33,9 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
-        jiggler.interval = settings.interval
-        jiggler.mode = settings.mode
-        jiggler.onlyWhenIdle = settings.onlyWhenIdle
+        jiggler.idleThreshold = settings.idleThreshold
+        jiggler.shape = settings.shape
         jiggler.shouldSkip = { [weak self] in
             guard let self else { return true }
             return self.isRecording || self.player.isPlaying
@@ -187,23 +186,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             key: "m",
             modifiers: HotKey.menuModifiers
         ) { [weak self] in self?.toggleJiggle() })
-        menu.addItem(submenu("이동 주기: \(Settings.intervalTitle(settings.interval))", items: Settings.intervalOptions.map { seconds in
-            ClosureMenuItem(title: Settings.intervalTitle(seconds), checked: settings.interval == seconds) { [weak self] in
-                self?.settings.interval = seconds
-                self?.jiggler.interval = seconds
+        menu.addItem(submenu("유휴 감지: \(Settings.durationTitle(settings.idleThreshold))", items: Settings.idleThresholdOptions.map { seconds in
+            ClosureMenuItem(title: Settings.durationTitle(seconds), checked: settings.idleThreshold == seconds) { [weak self] in
+                self?.settings.idleThreshold = seconds
+                self?.jiggler.idleThreshold = seconds
             }
         }))
-        menu.addItem(submenu("이동 방식", items: JiggleMode.allCases.map { mode in
-            ClosureMenuItem(title: mode.title, checked: settings.mode == mode) { [weak self] in
-                self?.settings.mode = mode
-                self?.jiggler.mode = mode
+        menu.addItem(submenu("모양: \(settings.shape.title)", items: JiggleShape.allCases.map { shape in
+            ClosureMenuItem(title: shape.title, checked: settings.shape == shape) { [weak self] in
+                self?.settings.shape = shape
+                self?.jiggler.shape = shape
             }
         }))
-        menu.addItem(ClosureMenuItem(title: "내가 사용 중일 땐 건너뛰기", checked: settings.onlyWhenIdle) { [weak self] in
-            guard let self else { return }
-            self.settings.onlyWhenIdle.toggle()
-            self.jiggler.onlyWhenIdle = self.settings.onlyWhenIdle
-        })
         menu.addItem(.separator())
 
         // 녹화 / 재생
@@ -252,7 +246,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return "▶︎ 재생 중"
         }
         if jiggler.isRunning {
-            return "커서 이동 켜짐 · \(Settings.intervalTitle(settings.interval))마다"
+            return "커서 이동 켜짐 · \(Settings.durationTitle(settings.idleThreshold)) 유휴 시 \(settings.shape.title)"
         }
         return "커서 이동 꺼짐"
     }
