@@ -20,6 +20,8 @@ public enum JiggleShape: String, CaseIterable, Codable, Sendable {
 public enum JigglePlanner {
     /// 도형의 가로/세로 크기 (pt)
     public static let shapeSize: CGFloat = 60
+    /// 원은 다른 도형보다 크게 그린다 (지름, pt)
+    public static let circleSize: CGFloat = 150
 
     /// 현재 위치에서 출발해 도형을 그리고 제자리로 돌아오는 `steps` 개의 좌표를 반환한다.
     /// 좌표계는 Quartz(좌상단 원점) 기준이며, 화면 밖으로 나가면 반대 방향으로 뒤집거나 가장자리에 맞춘다.
@@ -58,10 +60,11 @@ public enum JigglePlanner {
             }
             points = outward + outward.reversed().dropFirst()
         case .circle:
-            let segments = 72
+            let segments = 120
+            let circleRadius = circleSize / 2
             points = (0..<segments).map { index in
                 let angle = CGFloat.pi + 2 * .pi * CGFloat(index) / CGFloat(segments)
-                return CGPoint(x: radius + radius * cos(angle), y: radius * sin(angle))
+                return CGPoint(x: circleRadius + circleRadius * cos(angle), y: circleRadius * sin(angle))
             }
         case .square:
             points = [

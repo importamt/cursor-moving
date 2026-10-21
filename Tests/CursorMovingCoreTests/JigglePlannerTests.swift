@@ -48,6 +48,15 @@ final class JigglePlannerTests: XCTestCase {
         }
     }
 
+    func testCircleIsDrawnLargerThanOtherShapes() {
+        let current = CGPoint(x: 500, y: 300)
+        let path = JigglePlanner.path(shape: .circle, from: current, in: screen, steps: steps)
+        let diameter = path.map { distance(current, $0) }.max() ?? 0
+
+        XCTAssertEqual(diameter, JigglePlanner.circleSize, accuracy: 1)
+        XCTAssertGreaterThan(JigglePlanner.circleSize, JigglePlanner.shapeSize)
+    }
+
     func testShapeIsMirroredInsideWhenStartingAtBottomRightCorner() {
         let current = CGPoint(x: screen.maxX - 1, y: screen.maxY - 1)
         for shape in JiggleShape.allCases {
