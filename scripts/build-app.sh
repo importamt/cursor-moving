@@ -7,8 +7,10 @@ cd "$(dirname "$0")/.."
 APP_NAME="CursorMoving"
 APP="build/${APP_NAME}.app"
 
-swift build -c release --product "$APP_NAME"
-BIN_DIR="$(swift build -c release --show-bin-path)"
+# Apple silicon + Intel 유니버설 바이너리
+BUILD_ARGS=(-c release --arch arm64 --arch x86_64)
+swift build "${BUILD_ARGS[@]}" --product "$APP_NAME"
+BIN_DIR="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -23,7 +25,13 @@ SIGN_IDENTITY="${SIGN_IDENTITY:-$(security find-identity -v -p codesigning \
   | sed -E 's/.*"(.*)"/\1/' || true)}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 
-codesign --force --sign "$SIGN_IDENTITY" --identifier com.imbotaem.cursormoving "$APP"
+# 인증서 서명은 공증에 필요한 Hardened Runtime + 보안 타임스탬프를 함께 적용한다
+SIGN_OPTIONS=()
+if [[ "$SIGN_IDENTITY" != "-" ]]; then
+  SIGN_OPTIONS=(--options runtime --timestamp)
+fi
+
+codesign --force --sign "$SIGN_IDENTITY" "${SIGN_OPTIONS[@]+"${SIGN_OPTIONS[@]}"}" --identifier com.imbotaem.cursormoving "$APP"
 echo "서명: $SIGN_IDENTITY"
 
 if [[ "${1:-}" == "--install" ]]; then
