@@ -34,7 +34,9 @@ open build/CursorMoving.app
 - **손쉬운 사용**: 커서 이동, 클릭 재생
 - **입력 모니터링**: 클릭 녹화
 
-ad-hoc 서명이라 재빌드하면 권한 목록에서 CursorMoving 을 제거(−) 후 다시 허용해야 할 수 있다.
+빌드 스크립트는 키체인의 `Developer ID Application` / `Apple Development` 인증서로 서명한다 (`SIGN_IDENTITY` 로 지정 가능).
+인증서 서명은 팀 ID 기준이라 재빌드해도 권한이 유지된다. 인증서가 없으면 ad-hoc 서명으로 대체되며,
+이때는 재빌드마다 권한 목록에서 CursorMoving 을 제거(−) 후 다시 허용해야 한다.
 
 ## 구조
 
