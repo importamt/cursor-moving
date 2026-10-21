@@ -53,39 +53,6 @@ The icon turns green while it is on.
 3. Remove CursorMoving from **System Settings → Privacy & Security → Accessibility** (and **General → Login Items** if enabled).
 4. Optionally remove its preferences: `defaults delete com.imbotaem.cursormoving`
 
-## Build from source
-
-Requires Xcode 15 or later (Swift 5.9).
-
-```bash
-git clone https://github.com/importamt/cursor-moving.git
-cd cursor-moving
-swift test                         # unit tests
-./scripts/build-app.sh             # creates build/CursorMoving.app
-./scripts/build-app.sh --install   # copies it to /Applications
-open build/CursorMoving.app
-```
-
-`build-app.sh` signs with a `Developer ID Application` or `Apple Development` certificate from your keychain if one exists (override with `SIGN_IDENTITY`), otherwise ad-hoc.
-With a certificate, macOS keeps the Accessibility permission across rebuilds. With ad-hoc signing you have to remove and re-add CursorMoving in the Accessibility list after each rebuild.
-
-### Releasing (maintainers)
-
-```bash
-# one-time: store notarization credentials in the keychain
-xcrun notarytool store-credentials cursormoving-notary --apple-id <Apple ID> --team-id <Team ID>
-
-./scripts/release.sh   # test, build, notarize, staple → build/CursorMoving-<version>.zip
-gh release create v<version> build/CursorMoving-<version>.zip --generate-notes
-```
-
-The version comes from `CFBundleShortVersionString` in `Resources/Info.plist`.
-
-### Project structure
-
-- `Sources/CursorMovingCore`: pure logic (shape paths, idle check, key combos, strings) with unit tests
-- `Sources/CursorMoving`: AppKit menu bar app (CGEvent injection, Carbon hot keys, SwiftUI settings, SMAppService login item)
-
 ## License
 
 [MIT](LICENSE)
