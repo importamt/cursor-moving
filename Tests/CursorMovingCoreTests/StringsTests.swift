@@ -5,23 +5,10 @@ final class StringsTests: XCTestCase {
     private let korean = Strings(language: .korean)
     private let english = Strings(language: .english)
 
-    // MARK: - 언어 결정
+    // MARK: - 언어
 
-    func testSystemPreferenceUsesKoreanWhenFirstPreferredLanguageIsKorean() {
-        XCTAssertEqual(LanguagePreference.system.resolved(preferredLanguages: ["ko-KR", "en-US"]), .korean)
-    }
-
-    func testSystemPreferenceFallsBackToEnglishForOtherLanguages() {
-        XCTAssertEqual(LanguagePreference.system.resolved(preferredLanguages: ["ja-JP", "ko-KR"]), .english)
-    }
-
-    func testSystemPreferenceFallsBackToEnglishWhenNoPreferredLanguage() {
-        XCTAssertEqual(LanguagePreference.system.resolved(preferredLanguages: []), .english)
-    }
-
-    func testExplicitPreferenceIgnoresSystemLanguage() {
-        XCTAssertEqual(LanguagePreference.english.resolved(preferredLanguages: ["ko-KR"]), .english)
-        XCTAssertEqual(LanguagePreference.korean.resolved(preferredLanguages: ["en-US"]), .korean)
+    func testDefaultLanguageIsEnglish() {
+        XCTAssertEqual(Language.defaultLanguage, .english)
     }
 
     // MARK: - 문구
@@ -44,9 +31,6 @@ final class StringsTests: XCTestCase {
     }
 
     func testLanguageNamesAreAlwaysWrittenInTheirOwnLanguage() {
-        XCTAssertEqual(english.languagePreference(.korean), "한국어")
-        XCTAssertEqual(korean.languagePreference(.english), "English")
-        XCTAssertEqual(korean.languagePreference(.system), "시스템 설정 따름")
-        XCTAssertEqual(english.languagePreference(.system), "System Default")
+        XCTAssertEqual(Language.allCases.map(\.displayName), ["English", "한국어"])
     }
 }

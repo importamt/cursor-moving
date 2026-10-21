@@ -8,7 +8,11 @@ macOS 메뉴바 앱 — 유휴 시 커서로 도형 그리기
 현재 위치에서 약 2초에 걸쳐 **모양**(지그재그/동그라미/네모/별)을 그리고 제자리로 돌아온다.
 그리는 도중 마우스를 움직이거나 키를 누르면 즉시 멈춘다.
 
-메뉴의 **언어**에서 시스템 설정 따름 / 한국어 / English 를 고를 수 있다.
+## 환경설정 (메뉴 → Settings…, ⌘,)
+
+- **일반**: 로그인 시 자동 실행, 앱 시작 시 커서 이동 켜기
+- **언어**: English(기본) / 한국어
+- **단축키**: 변경… 을 누르고 원하는 조합(예: ⌘⌥O)을 눌러 확인. ⌘, ⌥, ⌃ 중 하나는 포함해야 하며 다른 앱이 쓰는 조합은 거절된다.
 
 ## 빌드 & 실행
 
@@ -23,7 +27,7 @@ open build/CursorMoving.app
 
 | 단축키 | 동작 |
 |--------|------|
-| ⌃⌥⌘M | 커서 이동 켜기/끄기 |
+| ⌃⌥⌘M | 커서 이동 켜기/끄기 (환경설정에서 변경 가능) |
 
 ## 메뉴바 아이콘
 
@@ -39,5 +43,5 @@ open build/CursorMoving.app
 
 ## 구조
 
-- `Sources/CursorMovingCore` — 순수 로직 (도형 경로 계산, 유휴 판정, 한/영 문구) + 테스트
-- `Sources/CursorMoving` — AppKit 메뉴바 앱 (CGEvent 주입, Carbon 단축키)
+- `Sources/CursorMovingCore` — 순수 로직 (도형 경로 계산, 유휴 판정, 단축키 조합, 한/영 문구) + 테스트
+- `Sources/CursorMoving` — AppKit 메뉴바 앱 (CGEvent 주입, Carbon 단축키, SwiftUI 환경설정, SMAppService 로그인 항목)

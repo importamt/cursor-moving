@@ -1,21 +1,25 @@
 import AppKit
-import Carbon
+import Combine
 import CursorMovingCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private enum HotKey {
-        static let modifiers = controlKey | optionKey | cmdKey
-        static let menuModifiers: NSEvent.ModifierFlags = [.control, .option, .command]
-        static let toggleJiggle: UInt32 = 1
-        static let toggleJiggleLabel = "⌃⌥⌘M"
-    }
+    private static let toggleHotKeyID: UInt32 = 1
 
     private let settings = Settings()
     private let jiggler = Jiggler()
 
     private var statusItem: NSStatusItem!
     private var hotKeyFailed = false
+    private var subscriptions: Set<AnyCancellable> = []
+    private lazy var preferences = PreferencesWindowController(
+        settings: settings,
+        shortcuts: ShortcutActions(
+            suspend: { HotKeyManager.shared.unregister(id: Self.toggleHotKeyID) },
+            resume: { [weak self] in self?.registerToggleHotKey() },
+            apply: { [weak self] combo in self?.applyToggleHotKey(combo) ?? false }
+        )
+    )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -23,16 +27,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
-        jiggler.idleThreshold = settings.idleThreshold
-        jiggler.shape = settings.shape
+        settings.$idleThreshold.sink { [jiggler] in jiggler.idleThreshold = $0 }.store(in: &subscriptions)
+        settings.$shape.sink { [jiggler] in jiggler.shape = $0 }.store(in: &subscriptions)
+        // @Published 는 값이 바뀌기 직전에 알리므로 다음 런루프에서 새 언어로 갱신한다
+        settings.$language
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.refreshStatusIcon() }
+            .store(in: &subscriptions)
 
-        hotKeyFailed = !HotKeyManager.shared.register(
-            id: HotKey.toggleJiggle,
-            keyCode: kVK_ANSI_M,
-            modifiers: HotKey.modifiers
-        ) { [weak self] in self?.toggleJiggle() }
+        registerToggleHotKey()
         Permissions.promptAccessibilityIfNeeded()
+        if settings.startMovingOnLaunch, AXIsProcessTrusted() {
+            jiggler.start()
+        }
         refreshStatusIcon()
+    }
+
+    // MARK: - 단축키
+
+    private func registerToggleHotKey() {
+        hotKeyFailed = !HotKeyManager.shared.register(id: Self.toggleHotKeyID, combo: settings.toggleHotKey) { [weak self] in
+            self?.toggleJiggle()
+        }
+    }
+
+    private func applyToggleHotKey(_ combo: KeyCombo) -> Bool {
+        guard HotKeyManager.shared.register(id: Self.toggleHotKeyID, combo: combo, handler: { [weak self] in
+            self?.toggleJiggle()
+        }) else { return false }
+        settings.toggleHotKey = combo
+        hotKeyFailed = false
+        return true
     }
 
     // MARK: - 동작
@@ -80,7 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             jiggler.isRunning ? strings.statusOn(threshold: settings.idleThreshold, shape: settings.shape) : strings.statusOff
         ))
         if hotKeyFailed {
-            menu.addItem(.disabled(strings.hotKeyConflict(HotKey.toggleJiggleLabel)))
+            menu.addItem(.disabled(strings.hotKeyConflict(settings.toggleHotKey.displayString)))
         }
         if !AXIsProcessTrusted() {
             menu.addItem(ClosureMenuItem(title: strings.grantAccessibility) {
@@ -91,27 +116,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(ClosureMenuItem(
             title: jiggler.isRunning ? strings.turnOff : strings.turnOn,
-            key: "m",
-            modifiers: HotKey.menuModifiers
+            key: settings.toggleHotKey.menuKeyEquivalent,
+            modifiers: settings.toggleHotKey.menuModifiers
         ) { [weak self] in self?.toggleJiggle() })
         menu.addItem(submenu(strings.idleMenu(settings.idleThreshold), items: Settings.idleThresholdOptions.map { seconds in
             ClosureMenuItem(title: strings.duration(seconds), checked: settings.idleThreshold == seconds) { [weak self] in
                 self?.settings.idleThreshold = seconds
-                self?.jiggler.idleThreshold = seconds
             }
         }))
         menu.addItem(submenu(strings.shapeMenu(settings.shape), items: JiggleShape.allCases.map { shape in
             ClosureMenuItem(title: strings.shape(shape), checked: settings.shape == shape) { [weak self] in
                 self?.settings.shape = shape
-                self?.jiggler.shape = shape
             }
         }))
-        menu.addItem(submenu(strings.languageMenu(settings.language), items: LanguagePreference.allCases.map { language in
-            ClosureMenuItem(title: strings.languagePreference(language), checked: settings.language == language) { [weak self] in
-                self?.settings.language = language
-                self?.refreshStatusIcon()
-            }
-        }))
+        menu.addItem(.separator())
+
+        menu.addItem(ClosureMenuItem(title: strings.settingsMenu, key: ",", modifiers: .command) { [weak self] in
+            self?.preferences.show()
+        })
         menu.addItem(.separator())
 
         menu.addItem(ClosureMenuItem(title: strings.quit, key: "q", modifiers: .command) {

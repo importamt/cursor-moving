@@ -1,21 +1,16 @@
 import Foundation
 
-public enum Language: String, Sendable {
-    case korean
+public enum Language: String, CaseIterable, Codable, Sendable {
     case english
-}
-
-public enum LanguagePreference: String, CaseIterable, Codable, Sendable {
-    case system
     case korean
-    case english
 
-    /// 시스템 설정을 따를 때는 첫 번째 선호 언어가 한국어면 한국어, 그 외에는 영어
-    public func resolved(preferredLanguages: [String] = Locale.preferredLanguages) -> Language {
+    public static let defaultLanguage: Language = .english
+
+    /// 언어 이름은 현재 언어와 상관없이 각 언어로 표기한다
+    public var displayName: String {
         switch self {
-        case .korean: return .korean
-        case .english: return .english
-        case .system: return preferredLanguages.first?.hasPrefix("ko") == true ? .korean : .english
+        case .english: return "English"
+        case .korean: return "한국어"
         }
     }
 }
@@ -48,15 +43,6 @@ public struct Strings: Sendable {
         }
     }
 
-    /// 언어 이름은 현재 언어와 상관없이 각 언어로 표기한다
-    public func languagePreference(_ preference: LanguagePreference) -> String {
-        switch preference {
-        case .system: return pick("시스템 설정 따름", "System Default")
-        case .korean: return "한국어"
-        case .english: return "English"
-        }
-    }
-
     public func statusOn(threshold: TimeInterval, shape: JiggleShape) -> String {
         pick(
             "커서 이동 켜짐 · \(duration(threshold)) 유휴 시 \(self.shape(shape))",
@@ -80,10 +66,6 @@ public struct Strings: Sendable {
         pick("모양: \(self.shape(shape))", "Shape: \(self.shape(shape))")
     }
 
-    public func languageMenu(_ preference: LanguagePreference) -> String {
-        pick("언어: \(languagePreference(preference))", "Language: \(languagePreference(preference))")
-    }
-
     public func hotKeyConflict(_ label: String) -> String {
         pick("⚠️ 단축키 충돌: \(label)", "⚠️ Shortcut conflict: \(label)")
     }
@@ -101,4 +83,40 @@ public struct Strings: Sendable {
 
     public var openSettings: String { pick("설정 열기", "Open Settings") }
     public var close: String { pick("닫기", "Close") }
+
+    // MARK: - 환경설정
+
+    public var settingsMenu: String { pick("설정…", "Settings…") }
+    public var settingsTitle: String { pick("CursorMoving 설정", "CursorMoving Settings") }
+    public var general: String { pick("일반", "General") }
+    public var launchAtLogin: String { pick("로그인 시 자동 실행", "Launch at login") }
+    public var startMovingOnLaunch: String { pick("앱 시작 시 커서 이동 켜기", "Start moving when app launches") }
+    public var loginItemNeedsApproval: String {
+        pick(
+            "시스템 설정 → 일반 → 로그인 항목에서 CursorMoving 을 허용해 주세요.",
+            "Allow CursorMoving in System Settings → General → Login Items."
+        )
+    }
+
+    public func loginItemFailed(_ reason: String) -> String {
+        pick("로그인 항목 변경 실패: \(reason)", "Couldn't change login item: \(reason)")
+    }
+
+    public var languageLabel: String { pick("언어", "Language") }
+    public var shortcut: String { pick("단축키", "Shortcut") }
+    public var toggleShortcut: String { pick("커서 이동 켜기/끄기", "Toggle cursor moving") }
+    public var change: String { pick("변경…", "Change…") }
+    public var resetToDefault: String { pick("기본값", "Default") }
+
+    // MARK: - 단축키 입력 창
+
+    public var recorderTitle: String { pick("새 단축키를 누르세요", "Press a new shortcut") }
+    public var recorderHint: String {
+        pick("⌘, ⌥, ⌃ 중 하나 이상과 함께 누르세요. Esc 로 취소합니다.", "Include ⌘, ⌥ or ⌃. Press Esc to cancel.")
+    }
+    public var recorderWaiting: String { pick("입력 대기 중…", "Waiting for keys…") }
+    public var recorderNeedsModifier: String { pick("⌘, ⌥, ⌃ 중 하나가 필요합니다", "Add ⌘, ⌥ or ⌃") }
+    public var recorderConflict: String { pick("다른 앱에서 사용 중인 단축키입니다", "Already used by another app") }
+    public var cancel: String { pick("취소", "Cancel") }
+    public var confirm: String { pick("확인", "OK") }
 }
